@@ -1,0 +1,22 @@
+
+<div class="relative md:max-w-2xl md:mx-auto w-full h-screen flex flex-col">
+    <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
+    <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
+
+    <!-- Botón de captura debajo del video -->
+    <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
+        <button type="button" (click)="closeModal()" class="px-4 py-2 bg-blue-500 text-white rounded">X</button>
+    </div>
+    <!-- Contenedor del video y canvas -->
+    <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
+        <video #video autoplay muted (loadedmetadata)="onVideoLoad()"></video>
+        <canvas #canvas></canvas>
+    </div>
+    
+    <!-- Botón de captura debajo del video -->
+    <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
+        <div class="absolute bottom-4 w-full flex justify-center">
+            <button type="button" (click)="takePhoto()" class="px-4 py-2 bg-blue-500 text-white rounded">Tomar foto</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+
+video {
+    transform: scaleX(-1);
+}
+
+video, canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    object-position: center;
+    clip-path: circle(42% at center);
+    /*pointer-events: none;  Evita que el canvas interfiera con eventos de ratón */
+}
