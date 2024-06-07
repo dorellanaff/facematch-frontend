@@ -1,6 +1,7 @@
 import * as faceapi from 'face-api.js';
 import { Component, Output, EventEmitter, OnChanges, AfterViewInit, ElementRef, ViewChild, HostListener, OnInit, input, Input, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FacematchService } from '../../../core/services/facematch.service';
 
 @Component({
   selector: 'app-webcam-face',
@@ -32,7 +33,7 @@ export class WebcamFaceComponent implements OnChanges, AfterViewInit { //AfterVi
   videoLoaded: boolean = false;
   photoTaken: boolean = false;
 
-  constructor() { }
+  constructor(private facematchService: FacematchService) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isModalOpen'] && changes['isModalOpen'].currentValue === true) {
@@ -127,7 +128,7 @@ export class WebcamFaceComponent implements OnChanges, AfterViewInit { //AfterVi
   
   private async detectFaces() {
 
-    if ( this.color != 'r' ){
+    if ( true ){
 
       const video = this.videoElement.nativeElement;
       const canvas = this.canvasElement.nativeElement;
@@ -139,7 +140,6 @@ export class WebcamFaceComponent implements OnChanges, AfterViewInit { //AfterVi
       //const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
       
       this.color = 'red';
-      this.message = 'Cara no detectada';
       if (detections.length === 1) {
         const detection = detections[0];
 
@@ -177,8 +177,10 @@ export class WebcamFaceComponent implements OnChanges, AfterViewInit { //AfterVi
 
         }
         //this.getPhoto();
-      } else {
+      } else if (detections.length > 1) {
         this.message = 'Muchas caras'
+      } else {
+        this.message = 'Cara no detectada';
       }
       this.drawCircle();
     
@@ -197,19 +199,38 @@ export class WebcamFaceComponent implements OnChanges, AfterViewInit { //AfterVi
   }
 
   takePhoto() {
+    this.listPhotos.shift();
     this.getPhoto();
 
     // Detiene la reproducción del video
-    this.videoElement.nativeElement.pause();
+    // this.videoElement.nativeElement.pause();
 
     if (this.interval) {
       clearInterval(this.interval); // Stop face detection interval
     }
 
-    if (this.color === 'green'){
-      this.animateCircleColor();
-    }
+    const url = 'https://18.207.149.37:8080/predict'
+
+    this.uploadImage(url, this.listPhotos[0])
+
+    //if (this.color === 'green'){
+    //  this.animateCircleColor();
+    //}
     
+  }
+
+  uploadImage(url: string, image: string) {
+    this.facematchService.uploadImage(url, image)
+      .subscribe(
+        response => {
+          console.log('Imagen subida exitosamente:', response);
+          alert(response.message);
+        },
+        error => {
+          console.error('Error al subir la imagen:', error);
+          alert(error.error.message ?? 'Error al subir la imagen')
+        }
+      );
   }
 
   getPhoto(){
