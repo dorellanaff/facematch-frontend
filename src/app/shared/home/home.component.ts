@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { WebcamFaceComponent } from '../components/webcam-face/webcam-face.component';
 import { CommonModule } from '@angular/common';
 import { HomeButtonsComponent } from "../components/home-buttons/home-buttons.component";
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
     selector: 'app-home',
@@ -10,8 +11,17 @@ import { HomeButtonsComponent } from "../components/home-buttons/home-buttons.co
     styleUrl: './home.component.scss',
     imports: [WebcamFaceComponent, CommonModule, HomeButtonsComponent]
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   isModalOpen = false;
+  idFace: string | null = null;
+
+
+  constructor(
+  ){}
+
+  ngOnInit(): void {
+    
+  }
 
   public listButtons = [
     {
@@ -33,7 +43,6 @@ export class HomeComponent {
       "text": "Asegurese de ubicar correctamente el rostro dentro del circulo marcado."
     }
   ]
-
 
   openModal() {
     this.isModalOpen = true;

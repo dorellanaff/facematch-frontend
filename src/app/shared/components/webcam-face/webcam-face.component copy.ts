@@ -4,8 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FacematchService } from '../../../core/services/facematch.service';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { ActivatedRoute } from '@angular/router';
-import { FaceDetectionWorkerService } from '../../../core/services/face-detection-worker.service'
-import { Any } from '@tensorflow/tfjs-core';
 
 @Component({
   selector: 'app-webcam-face',
@@ -14,44 +12,38 @@ import { Any } from '@tensorflow/tfjs-core';
   templateUrl: './webcam-face.component.html',
   styleUrl: './webcam-face.component.scss'
 })
-export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewInit
+export class WebcamFaceComponent implements OnInit, OnChanges, AfterViewInit { //AfterViewInit
   @Input() isModalOpen: boolean = false;
   @Output() close = new EventEmitter<void>();
   @ViewChild('canvas') canvasElement!: ElementRef;
   @ViewChild('video') videoElement!: ElementRef;
   @ViewChild('videoContainer') videoContainerElement!: ElementRef<HTMLDivElement>;
-
-  private worker!: Worker;
-
-  // Define un margen de tolerancia para la posición y la inclinación de la cara
-  tamañoRelativoXHistorial: number[] = [];
-  tamañoRelativoYHistorial: number[] = [];
-  ventanaTamaño: number = 5;
-  inclinacionMaxima: number = 10; // Ángulo máximo de inclinación permitido en grados
-  isMobile: boolean = false;
-  color: string = 'red';
-  message: string = 'Cara no detectada';
-  position: string = '';
-
   private videoStream!: MediaStream | null;
   private listPhotos: string[] = [];
-  private interval: any;
-  private isProcessing: boolean = false;
-  private context!: CanvasRenderingContext2D;
-  
+
+  // Define un margen de tolerancia para la posición y la inclinación de la cara
+  centradoTolerancia = 0.1; // 10% de margen de error en la posición centrada
+  inclinacionMaxima = 10; // Ángulo máximo de inclinación permitido en grados
+
+  interval: any;
   isTakingPhoto: boolean = false;
+  private context!: CanvasRenderingContext2D;
   colorCanvas: string = '#FF0000'; // Color del círculo
   backgroundColorCanvas: string = '#FFFFFF'; // Color del fondo fuera del círculo
 
+  private color: string = 'red';
+  public message: string = '';
+  public position: string = '';
   private displaySize: { width: number, height: number } = { width: 0, height: 0 };
 
   public resultCheck: boolean = false;
   public resultMessageLiveness: string = '';
   public resultMessageMatchFace: string = '';
 
-  public videoLoaded: boolean = false;
-  public photoTaken: boolean = false;
-  public idFace: string | null = null;
+  videoLoaded: boolean = false;
+  photoTaken: boolean = false;
+  isMobile: boolean;
+  idFace: string | null = null;
 
   private animationFrameId!: number;
 
@@ -59,59 +51,41 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     private facematchService: FacematchService,
     private deviceService: DeviceDetectorService,
     private route: ActivatedRoute,
-    private faceDetectionWorkerService: FaceDetectionWorkerService
+    private ngZone: NgZone
   ) { 
     this.isMobile = this.deviceService.isMobile();
-    if (typeof Worker !== 'undefined') {
-      this.worker = new Worker(new URL('../../../core/workers/face-detection.worker', import.meta.url));
-      
-      this.worker.onmessage = ({ data }) => {
-        this.handleWorkerMessage(data);
-      };
-
-    } else {
-      console.log('Web Workers are not supported in this environment.');
-    }
-
-  }
-  
-  // Load the models
-  async loadModels() {
-    //await faceapi.nets.tinyFaceDetector.loadFromUri('assets/weights');
-    //await faceapi.nets.faceLandmark68Net.loadFromUri('assets/weights');
-    //await faceapi.nets.faceRecognitionNet.loadFromUri('assets/weights');
-    
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('assets/weights'),
-      faceapi.nets.faceLandmark68Net.loadFromUri('assets/weights'),
-      faceapi.nets.faceRecognitionNet.loadFromUri('assets/weights'),
-      //faceapi.nets.faceExpressionNet.loadFromUri('../../assets/models')
-    ]).then(() => this.startVideo());
   }
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
       this.idFace = params.get('idFace');
-      // console.log('idFace:', this.idFace);
+      console.log('idFace:', this.idFace);
     });
 
-    this.loadModels();
-    
   }
 
   ngOnDestroy() {
     cancelAnimationFrame(this.animationFrameId);
+  }
 
-    if (this.worker) {
-      this.worker.terminate();
-    }
-    if (this.interval) {
-      clearInterval(this.interval);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isModalOpen'] && changes['isModalOpen'].currentValue === true) {
+      this.initFace();
     }
   }
 
   async ngAfterViewInit(): Promise<void> {
     this.context = this.canvasElement.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+
+  }
+
+  async initFace() {
+
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('assets/weights/'),
+      faceapi.nets.faceLandmark68Net.loadFromUri('assets/weights/'),
+      faceapi.nets.faceRecognitionNet.loadFromUri('assets/weights/')
+    ]);
 
     this.startVideo();
   }
@@ -126,6 +100,36 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.resizeCanvas();
   }
 
+  private getColorHex(colorName: string) {
+    let hexCode;
+  
+    switch (colorName) {
+      case 'red':
+        hexCode = '#ff0000';
+        break;
+      case 'green':
+        hexCode = '#008000'
+        break;
+      default:
+        hexCode = '#000000'; // default to black if color name is not recognized
+        break;
+    }
+  
+    return hexCode;
+  }
+
+  private resizeCanvas() {
+    const video = this.videoElement.nativeElement!;
+    const videoWidth = video.offsetWidth;
+    const videoHeight = video.offsetHeight;
+    
+    this.canvasElement.nativeElement.width = videoWidth+1;
+    this.canvasElement.nativeElement.height = videoHeight+1;
+
+    let videoContaineHeight = videoHeight + 100;
+    this.videoContainerElement.nativeElement.style.maxHeight = `${videoContaineHeight}px`;
+  }
+
   private calcularInclinacionOjos(landmarks: faceapi.FaceLandmarks68) {
     const ojoIzquierdo = landmarks.getLeftEyeBrow();
     const ojoDerecho = landmarks.getRightEyeBrow();
@@ -138,6 +142,11 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   
     return inclinacionGrados;
   }
+  
+  // Variables para mantener un historial de los valores de tamaño relativo
+  tamañoRelativoXHistorial: number[] = [];
+  tamañoRelativoYHistorial: number[] = [];
+  ventanaTamaño: number = 5; // Tamaño de la ventana para el filtro de media móvil
 
   async startVideo() {
     const video = this.videoElement.nativeElement;
@@ -171,6 +180,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     }
   }
   
+
   private onVideoLoaded() {
         
     this.resizeCanvas();
@@ -184,50 +194,86 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   private async detectFaces() {
-    if (this.isProcessing) {
-      return;
+
+    if ( true ){
+
+      const video = this.videoElement.nativeElement;
+      const canvas = this.canvasElement.nativeElement;
+
+      //this.displaySize = { width: video.videoWidth, height: video.videoHeight };
+      //faceapi.matchDimensions(canvas, this.displaySize);
+
+      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+      //const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+      
+      this.color = 'red';
+      if (detections.length === 1) {
+        const detection = detections[0];
+
+        // if (this.isFaceInsideCircle(detection, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2)){
+          
+          const landmarks = detection.landmarks;
+          const inclinacion = this.calcularInclinacionOjos(landmarks);
+
+          if (inclinacion >= this.inclinacionMaxima) {
+            //console.log('La cara no está recta.');
+            this.message = 'Cara no recta';
+
+          } else {
+            // Calcular el tamaño relativo de la cara en el canvas
+            const menorDimension = Math.min(canvas.width, canvas.height);
+            const tamañoRelativoX = detection.detection.box.width / menorDimension;
+            const tamañoRelativoY = detection.detection.box.height / menorDimension;
+            
+            // Agregar los valores actuales al historial
+            this.tamañoRelativoXHistorial.push(tamañoRelativoX);
+            this.tamañoRelativoYHistorial.push(tamañoRelativoY);
+            
+            let extra = this.isMobile ? 0.20 : 0;
+
+            // Definir los umbrales mínimo y máximo de tamaño para x e y
+            const tamañoMinimoUmbralX = 0.33 + extra;
+            const tamañoMaximoUmbralX = 0.51 + extra;
+            const tamañoMinimoUmbralY = 0.33 + extra;
+            const tamañoMaximoUmbralY = 0.51 + extra;
+
+            // Mantener el historial dentro del tamaño de la ventana
+            if (this.tamañoRelativoXHistorial.length > this.ventanaTamaño) {
+              this.tamañoRelativoXHistorial.shift();
+            }
+            if (this.tamañoRelativoYHistorial.length > this.ventanaTamaño) {
+              this.tamañoRelativoYHistorial.shift();
+            }
+
+            // Calcular el promedio de los valores en el historial
+            const promedioTamañoRelativoX = this.tamañoRelativoXHistorial.reduce((a, b) => a + b, 0) / this.tamañoRelativoXHistorial.length;
+            const promedioTamañoRelativoY = this.tamañoRelativoYHistorial.reduce((a, b) => a + b, 0) / this.tamañoRelativoYHistorial.length;
+
+            this.position = `X: ${promedioTamañoRelativoX.toFixed(2)}, Y: ${promedioTamañoRelativoY.toFixed(2)}`;
+
+            // Verificar si el tamaño de la cara está dentro de los rangos adecuados
+            if (promedioTamañoRelativoX < tamañoMinimoUmbralX || promedioTamañoRelativoY < tamañoMinimoUmbralY) {
+              this.message = 'Acerquese';
+            } else if (promedioTamañoRelativoX > tamañoMaximoUmbralX || promedioTamañoRelativoY > tamañoMaximoUmbralY) {
+              this.message = 'Alejese';
+            } else {
+              this.message = 'No se mueva';
+              this.color = 'green';
+            }
+            
+        //   }
+
+        }
+        //this.getPhoto();
+      } else if (detections.length > 1) {
+        this.message = 'Muchas caras'
+      } else {
+        this.message = 'Cara no detectada';
+      }
+      //this.resizeCanvas();
+    
     }
     
-    const video = this.videoElement.nativeElement;
-    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
-
-    this.isProcessing = true;
-    
-    this.worker.postMessage({
-      action: 'detectFaces',
-      detections: detections,
-      width: video.videoWidth,
-      height: video.videoHeight,
-      isMobile: this.isMobile,
-      ventanaTamaño: this.ventanaTamaño,
-      inclinacionMaxima: this.inclinacionMaxima,
-      tamañoRelativoXHistorial: this.tamañoRelativoXHistorial,
-      tamañoRelativoYHistorial: this.tamañoRelativoYHistorial
-    });
-    
-  }
-
-  private handleWorkerMessage(event: MessageEvent) {
-    this.isProcessing = false;
-    const data = event.data;
-
-    if (data.action === 'faceDetectionResult') {
-      const { message, color } = data.data;
-
-      this.processDetections(message, color);
-
-    } else if (data.action === 'error') {
-      console.error(data.error);
-    }
-
-  }
-
-  private processDetections(message: string, color: string) {
-    this.color = color;
-    this.message = message;
-
-    console.log(color, message);
-
   }
 
   private isFaceInsideCircle(detection: any, circleX: number, circleY: number, radius: number): boolean {
@@ -240,21 +286,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     return distance <= radius;
   }
 
-  // Anoter functions
-
-  private resizeCanvas() {
-    const video = this.videoElement.nativeElement!;
-    const videoWidth = video.offsetWidth;
-    const videoHeight = video.offsetHeight;
-    
-    this.canvasElement.nativeElement.width = videoWidth+1;
-    this.canvasElement.nativeElement.height = videoHeight+1;
-
-    let videoContaineHeight = videoHeight + 100;
-    this.videoContainerElement.nativeElement.style.maxHeight = `${videoContaineHeight}px`;
-  }
-
-  public takePhoto() {
+  takePhoto() {
 
     // pruebas
     return;
@@ -280,7 +312,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     
   }
 
-  private checkLiveness(url: string, image: string) {
+  checkLiveness(url: string, image: string) {
     this.facematchService.checkLiveness(url, image)
       .subscribe(
         response => {
@@ -304,7 +336,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       );
   }
 
-  private matchFace(url: string, image: string) {
+  matchFace(url: string, image: string) {
     if (this.idFace == null){
       return;
     }
@@ -327,7 +359,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       );
   }
 
-  private getPhoto(){
+  getPhoto(){
     // Captura el fotograma actual del video
     const canvas = document.createElement('canvas');
     canvas.width = this.videoElement.nativeElement.videoWidth;
@@ -344,7 +376,16 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     
   }
 
-  public closeModal() {
+  private appendImageToBody(imgData: string) {
+      // Crear un elemento de imagen
+      const imgElement = document.createElement('img');
+      // Establecer el src de la imagen como la imagen capturada
+      imgElement.src = imgData;
+      // Agregar la imagen al final del body
+      document.body.appendChild(imgElement);
+  }
+
+  closeModal() {
     console.log('closeModal');
     if (this.interval) {
       clearInterval(this.interval); // Stop face detection interval
@@ -353,7 +394,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.close.emit();
   }
 
-  private stopVideo() {
+  stopVideo() {
     if (this.videoStream) {
       this.videoStream.getTracks().forEach(track => track.stop());
       this.videoStream = null; // Liberar la referencia
@@ -399,7 +440,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     }, 1000 / framesPerSecond);
   }
 
-  public onVideoLoad() {
+  onVideoLoad() {
     this.videoLoaded = true;
   }
 

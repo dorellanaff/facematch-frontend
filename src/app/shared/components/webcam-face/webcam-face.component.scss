@@ -9,6 +9,6 @@ video, canvas {
     left: 0;
     object-fit: cover;
     object-position: center;
-    clip-path: circle(42% at center);
+    // clip-path: circle(42% at center);
     /*pointer-events: none;  Evita que el canvas interfiera con eventos de ratón */
 }

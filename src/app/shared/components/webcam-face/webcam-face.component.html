@@ -1,16 +1,34 @@
 
 <div class="relative md:max-w-2xl md:mx-auto w-full h-screen flex flex-col">
     <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
-    <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
+    <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
+    
+    
+    @if (resultCheck && photoTaken === true) {
+        <p class="text-4xl font-bold">{{resultMessageLiveness}}</p>
+        <p class="text-4xl font-bold">{{resultMessageMatchFace}}</p>
+    }
 
     <!-- Botón de captura debajo del video -->
     <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
-        <button type="button" (click)="closeModal()" class="px-4 py-2 bg-blue-500 text-white rounded">X</button>
+        <div class="flex justify-between items-center">
+            <div class="w-5%">
+            <button type="button" (click)="closeModal()" class="w-full h-full bg-red-500 text-white px-4 py-2 rounded-md">X</button>
+            </div>
+            <div class="w-95% text-center absolute bottom-4 w-full flex justify-center">
+                <p class="text-4xl font-bold">{{message}}</p>
+                <!-- <p class="text-4xl font-bold"> - {{position}}</p> -->
+            </div>
+        </div>
     </div>
+
+
     <!-- Contenedor del video y canvas -->
     <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
-        <video #video autoplay muted (loadedmetadata)="onVideoLoad()"></video>
-        <canvas #canvas></canvas>
+        <video #video (loadedmetadata)="onVideoLoad()"></video>
+        <canvas #canvas hidden></canvas>
+        <!--<canvas #canvas hidden width="{{ video?.offsetWidth ?? 0 + 5 }}" height="{{ video?.offsetHeight ?? 0 + 5 }}"></canvas>-->
+
     </div>
     
     <!-- Botón de captura debajo del video -->
