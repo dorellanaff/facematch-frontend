@@ -4,7 +4,8 @@
     <!--
         
     -->
-    <h2>{{meanTimeDetect}}</h2>
+    <h2>Ms: {{meanTimeDetect}}</h2>
+    <h2>Mobile: {{isMobile}}</h2>
     
     <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>

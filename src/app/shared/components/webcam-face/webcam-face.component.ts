@@ -119,18 +119,22 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
           height: { ideal: 1080 }
         }
       };
+
+      if (this.isMobile){
+        // Obtener el stream de video sin restricciones
+        this.videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        
+      } else {
+        // Solicitar el stream de video con las restricciones de resolución máxima
+        this.videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+      }
       
-      // Solicitar el stream de video con las restricciones de resolución máxima
-      this.videoStream = await navigator.mediaDevices.getUserMedia(constraints);
       
     } catch (error) {
       console.error('Error accessing the webcam:', error);
 
-      // Obtener el stream de video sin restricciones
-      this.videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
     }
     finally {
-
       if (this.videoStream){
         video.srcObject = this.videoStream;
         video.addEventListener('loadeddata', () => this.onVideoLoaded());
