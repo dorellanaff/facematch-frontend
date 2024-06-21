@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 const url = environment.MAIN_URL;	
 const url_reco_liveness = `${environment.MAIN_URL}${environment.URL_RECO_LIVENESS}`;
 const url_reco_match = `${environment.MAIN_URL}${environment.URL_RECO_MATCH}`;
+const url_reco_match_csrftoken = `${environment.MAIN_URL}${environment.URL_RECO_MATCH_CSRFTOKEN}`;
 
 @Injectable({
   providedIn: 'root'
@@ -29,20 +30,32 @@ export class FacematchService {
     return this.http.post(url_reco_liveness, formData);
   }
 
-  matchFace(imageBase64: string, idFace: string): Observable<any> {
+  validateIdFace(idFace: string): Observable<any> {
+    
+    const url = `${url_reco_match_csrftoken}${idFace}`;
+
+    return this.http.get(url);
+
+  }
+
+  matchFace(imageBase64: string, idFace: string, csrfToken: string): Observable<any> {
     // Convert base64 string to File object
     const imageBlob = this.base64ToBlob(imageBase64, 'image/png');
 
     const formData = new FormData();
     formData.append('file', imageBlob, 'image.png');
-    formData.append('id_face', idFace)
+
     const headers = new HttpHeaders({
-      'Accept': '*/*',
-      'Content-Type': 'multipart/form-data',
-      //'Authorization': `Bearer ${this.bearerToken}`
+      //'Accept': '*/*',
+      //'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryPHkoCJyNk2eM8hUr',
+      //'Authorization': `Bearer ${this.bearerToken}`,
+      'X-CSRF-Token': csrfToken,
+      'id-face': idFace
     });
   
-    return this.http.post(url_reco_match, formData);
+    return this.http.post(url_reco_match, formData, { headers });
+    //return this.http.post(url_reco_match, formData);
+
   }
   
   // Helper function to convert base64 string to Blob object

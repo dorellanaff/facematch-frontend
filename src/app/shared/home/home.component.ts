@@ -3,6 +3,7 @@ import { WebcamFaceComponent } from '../components/webcam-face/webcam-face.compo
 import { CommonModule } from '@angular/common';
 import { HomeButtonsComponent } from "../components/home-buttons/home-buttons.component";
 import { ActivatedRoute } from '@angular/router';
+import { FacematchService } from '../../core/services/facematch.service';
 
 @Component({
     selector: 'app-home',
@@ -12,15 +13,43 @@ import { ActivatedRoute } from '@angular/router';
     imports: [WebcamFaceComponent, CommonModule, HomeButtonsComponent]
 })
 export class HomeComponent implements OnInit {
-  isModalOpen = false;
-  idFace: string | null = null;
+  public isModalOpen: boolean = false;
+  public idFace: string | null = null;
 
+  public csrfToken: string = ''; // cambiar por cookies
+
+  public showButton: boolean = false;
 
   constructor(
+    private facematchService: FacematchService,
+    private route: ActivatedRoute
   ){}
 
   ngOnInit(): void {
-    
+    this.route.queryParamMap.subscribe(params => {
+      this.idFace = params.get('idFace');
+      
+      if (this.idFace != null){
+
+        this.facematchService.validateIdFace(this.idFace).subscribe({
+          next: (data: any) => {
+            this.csrfToken = data.csrf_token;
+
+            this.showButton = true;
+  
+          }, 
+          error: (error: any) => {
+            console.log(error.error.detail ?? 'Error al validar ID Face');
+              
+          }
+        });
+        
+      }
+      else{
+        console.log('ID Face no detectado');
+      }
+
+    });
   }
 
   public listButtons = [

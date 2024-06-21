@@ -1,9 +1,9 @@
-import * as faceapi from 'face-api.js';
 import { Component, Output, EventEmitter, OnChanges, AfterViewInit, ElementRef, ViewChild, HostListener, OnInit, input, Input, SimpleChanges, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FacematchService } from '../../../core/services/facematch.service';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
@@ -16,7 +16,11 @@ const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 })
 export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewInit
   @Input() isModalOpen: boolean = false;
+  @Input() idFace: string | null = null;
+  @Input() csrfToken: string | null = null; // cambiar por cookies
+  
   @Output() close = new EventEmitter<void>();
+
   @ViewChild('canvas') canvasElement!: ElementRef;
   @ViewChild('video') videoElement!: ElementRef;
   @ViewChild('videoContainer') videoContainerElement!: ElementRef<HTMLDivElement>;
@@ -32,7 +36,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   isMobile: boolean = false;
   color: string = 'red';
   message: string = 'Centre el rostro';
-  position: string = '';
+  public position: string = '';
 
   private videoStream!: MediaStream | null;
   public listPhotos: string[] = [];
@@ -50,7 +54,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   public videoLoaded: boolean = false;
   public photoTaken: boolean = false;
-  public idFace: string | null = null;
 
   private isAnimating: boolean = false;
 
@@ -62,10 +65,13 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   constructor(
     private facematchService: FacematchService,
     private deviceService: DeviceDetectorService,
-    private route: ActivatedRoute
-  ) { 
-    this.isMobile = this.deviceService.isMobile();
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {
+
     if (typeof Worker !== 'undefined') {
+      this.isMobile = this.deviceService.isMobile();
+
       //this.worker = new Worker(new URL('../../../core/workers/face-detection.worker', import.meta.url));
       this.worker = new Worker('assets/js/face-detection-worker.js');
       this.worker.postMessage({type: "loadModels"});
@@ -81,10 +87,12 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   ngOnInit(): void {
-    this.route.queryParamMap.subscribe(params => {
-      this.idFace = params.get('idFace');
-    });
 
+    if (this.csrfToken === null){
+      this.closeModal();
+    }
+
+    console.log(this.csrfToken);
   }
 
   ngOnDestroy() {
@@ -173,9 +181,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
       this.worker.postMessage({
         type: "detect",
+        inputSize: this.isMobile ? 128 : 416,
         initTime: initTime,
-        width: video.videoWidth,
-        height: video.videoHeight,
+        width: width,
+        height: height,
         isMobile: this.isMobile,
         ventanaTamaño: this.ventanaTamaño,
         inclinacionMaxima: this.inclinacionMaxima,
@@ -210,12 +219,18 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     } finally {
       // Llamar a detectFaces de nuevo para iniciar el siguiente ciclo
       requestAnimationFrame(() => {
-        this.detectFaces();
-        if (!this.startDetection) {
+        
+
+        setTimeout(() => {
+          this.detectFaces();
+        }, 1000);
+        
+        /*if (!this.startDetection) {
           setTimeout(() => {
             this.detectingFaces();
           }, this.meanTimeDetect);
-        }
+        }*/
+
       });
     }
   }
@@ -228,9 +243,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       if (event.type === 'faceDetectionResult') {
         this.isProcessing = false;
 
-        const { message, color } = event.data;
+        const { message, color, position } = event.data;
         this.message = message;
         this.color = color;
+        this.position = position;
         
         if ('initTime' in event){
           const initTime = event.initTime as number;
@@ -243,9 +259,11 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if (color === 'green'){
           // Audit photo
           if (this.videoStream && this.isAnimating === false){
+            
             setTimeout(() => {
               this.getPhoto();
             }, 250);
+            
           }
         }
 
@@ -344,47 +362,49 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   private checkLiveness(image: string) {
-    this.facematchService.checkLiveness(image)
-      .subscribe(
-        response => {
-          console.log('Imagen subida exitosamente:', response);
-          let message = `Liveness - ${response.message} - ${response.threshold}`
-          this.resultCheck = true;
-          this.resultMessageLiveness = message;
+    this.facematchService.checkLiveness(image).subscribe({
+      next: (data: any) => {
+        console.log('Imagen subida exitosamente:', data);
+        let message = `Liveness - ${data.message} - ${data.threshold}`
+        this.resultCheck = true;
+        this.resultMessageLiveness = message;
 
-          //this.matchFace(this.listPhotos[0])
+        this.matchFace();
 
-        },
-        error => {
-          console.error('Error al subir la imagen:', error);
-          let message = `Liveness - ${error.error.message ?? 'Error al subir la imagen'} - ${error.error.threshold ?? 0}`
-          this.resultCheck = true;
-          this.resultMessageLiveness = message;
-        }
-      );
+      }, 
+      error: (error: any) => {
+        console.error('Error al subir la imagen:', error);
+        let message = `Liveness - ${error.error.message ?? 'Error al subir la imagen'} - ${error.error.threshold ?? 0}`
+        this.resultCheck = true;
+        this.resultMessageLiveness = message;
+          
+      }
+    });
+
   }
 
-  private matchFace(image: string) {
-    if (this.idFace == null){
+  private matchFace() {
+    if (this.idFace == null || this.csrfToken == null){
       return;
     }
 
-    this.facematchService.matchFace(image, this.idFace)
-      .subscribe(
-        response => {
-          console.log('Imagen subida exitosamente:', response);
-          let message = `Match Face - ${response.message} - ${response.threshold}`
-          this.resultCheck = true;
-          this.resultMessageMatchFace = message;
+    this.facematchService.matchFace(this.listPhotos.slice(-1)[0], this.idFace, this.csrfToken).subscribe({
+      next: (data: any) => {
+        console.log('Imagen subida exitosamente:', data);
+        let message = `Match Face - ${data.message} - ${data.threshold}`
+        this.resultCheck = true;
+        this.resultMessageMatchFace = message;
 
-        },
-        error => {
-          console.error('Error al subir la imagen:', error);
+      }, 
+      error: (error: any) => {
+        console.error('Error al subir la imagen:', error);
           let message = `Match Face - ${error.error.message ?? 'Error al subir la imagen'} - ${error.error.threshold ?? 0}`
           this.resultCheck = true;
           this.resultMessageMatchFace = message;
-        }
-      );
+          
+      }
+    });
+
   }
 
   private getPhoto(){
@@ -407,6 +427,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.startDetection = false;
     this.stopVideo();
     this.close.emit();
+
+    if (this.worker){
+      this.worker.terminate();
+    }
 
   }
 

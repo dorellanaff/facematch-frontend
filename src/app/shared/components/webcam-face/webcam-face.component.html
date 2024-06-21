@@ -6,8 +6,9 @@
     -->
     <h2>Ms: {{meanTimeDetect}}</h2>
     <h2>Mobile: {{isMobile}}</h2>
+    <h2>{{position}}</h2>
     
-    <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
+    <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     
     
@@ -24,7 +25,6 @@
             </div>
             <div class="w-95% text-center absolute bottom-4 w-full flex justify-center">
                 <p class="text-4xl font-bold">{{message}}</p>
-                <!-- <p class="text-4xl font-bold"> - {{position}}</p> -->
             </div>
         </div>
     </div>

@@ -4,8 +4,7 @@ importScripts('../../../assets/js/face-api.min.js');
 let model;
 
 let selected_face_detector = 'tiny_face_detector'; //'ssd_mobilenetv1';
-let inputSize = 512
-let scoreThreshold = 0.5
+let scoreThreshold = 0.5;
 const minConfidence = 0.05; // expression
 
 
@@ -40,13 +39,14 @@ async function use(data){
 	try {
 		// props is the message from the main thread
 		const imgData = new ImageData(
-		new Uint8ClampedArray(data.data),
-		data.width,
-		data.height
+			new Uint8ClampedArray(data.data),
+			data.width,
+			data.height
 		);
 
 		// Create a canvas from our rgbaBuffer
 		const img = faceapi.createCanvasFromMedia(imgData);
+		const inputSize = data.inputSize;
 		
 		//detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })).withFaceLandmarks();
 		detections = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })).withFaceLandmarks();
@@ -69,6 +69,7 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
   
 	let color = 'red';
 	let message = 'Cara no detectada';
+	let position = '';
   
 	let data_process = {
 	}
@@ -90,7 +91,7 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 			tamañoRelativoXHistorial.push(tamañoRelativoX);
 			tamañoRelativoYHistorial.push(tamañoRelativoY);
 
-			let extra = isMobile ? 0.20 : 0;
+			let extra = isMobile ? 0.25 : 0;
 
 			const tamañoMinimoUmbralX = 0.35 + extra;
 			const tamañoMaximoUmbralX = 0.55 + extra;
@@ -110,9 +111,12 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 			if (inclinacion >= inclinacionMaxima) {
 				message = 'Cara no recta';
 			} else {
-				if (promedioTamañoRelativoX < tamañoMinimoUmbralX || promedioTamañoRelativoY < tamañoMinimoUmbralY) {
+
+				position = `(${tamañoRelativoX}, ${tamañoRelativoY})`;
+
+				if (promedioTamañoRelativoX < tamañoMinimoUmbralX && promedioTamañoRelativoY < tamañoMinimoUmbralY) {
 					message = 'Acerquese';
-				} else if (promedioTamañoRelativoX > tamañoMaximoUmbralX || promedioTamañoRelativoY > tamañoMaximoUmbralY) {
+				} else if (promedioTamañoRelativoX > tamañoMaximoUmbralX && promedioTamañoRelativoY > tamañoMaximoUmbralY) {
 					message = 'Alejese';
 				} else {
 					message = 'No se mueva';
@@ -124,11 +128,9 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 			message = 'Mas de una cara';
 		}*/
 
-		data_process = { message: message, color: color };
-
-	} else {
-		data_process = { message: message, color: color };
 	}
+	
+	data_process = { message: message, color: color, position: position };
 	
 	
 	return data_process;

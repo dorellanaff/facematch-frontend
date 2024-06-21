@@ -8,7 +8,7 @@
             <div class="mx-auto max-w-2xl lg:text-center">
                 <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Verificación de Identidad</p>
                 
-                <button 
+                <button *ngIf="showButton"
                     (click)="openModal()" 
                     class="mt-8 inline-block rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
                 >Iniciar</button>
@@ -19,7 +19,7 @@
 
         </main>
 
-        <app-webcam-face class="justify-center min-h-screen" [isModalOpen]="isModalOpen" *ngIf="isModalOpen" (close)="closeModal()"></app-webcam-face>
+        <app-webcam-face class="justify-center min-h-screen" [csrfToken]="csrfToken" [idFace]="idFace" [isModalOpen]="isModalOpen" *ngIf="isModalOpen" (close)="closeModal()"></app-webcam-face>
 
     </div>
 
