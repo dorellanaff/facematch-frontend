@@ -3,6 +3,10 @@
 import { Any } from '@tensorflow/tfjs-core';
 import * as faceapi from 'face-api.js';
 
+import '../../../assets/js/faceEnvWorkerPatch.js';
+
+
+
 
 addEventListener('message', async ({ data }) => {
   const { action } = data;
@@ -15,6 +19,7 @@ addEventListener('message', async ({ data }) => {
     const { action, detections, width, height, isMobile, ventanaTamaño, inclinacionMaxima, tamañoRelativoXHistorial, tamañoRelativoYHistorial } = data;
 
     try {
+
       data_process.data = await handleFaceDetection(detections, width, height, isMobile, ventanaTamaño, inclinacionMaxima, tamañoRelativoXHistorial, tamañoRelativoYHistorial);
       data_process.action = 'faceDetectionResult';
 
@@ -35,11 +40,13 @@ addEventListener('message', async ({ data }) => {
 
 async function handleFaceDetection(detections: any, width: number, height: number, isMobile: boolean, ventanaTamaño: number, inclinacionMaxima: number, tamañoRelativoXHistorial: number[], tamañoRelativoYHistorial: number[]) {
   
+  let color = 'red';
+
   let data_process = {
   }
   
-  if (detections.length === 1) {
-    const detection = detections[0];
+  if (detections) {
+    const detection = detections;
 
     const landmarks = detection.landmarks._positions;
     const inclinacion = calcularInclinacionOjos(landmarks);
@@ -53,10 +60,10 @@ async function handleFaceDetection(detections: any, width: number, height: numbe
 
     let extra = isMobile ? 0.20 : 0;
 
-    const tamañoMinimoUmbralX = 0.33 + extra;
-    const tamañoMaximoUmbralX = 0.51 + extra;
-    const tamañoMinimoUmbralY = 0.33 + extra;
-    const tamañoMaximoUmbralY = 0.51 + extra;
+    const tamañoMinimoUmbralX = 0.42 + extra;
+    const tamañoMaximoUmbralX = 0.55 + extra;
+    const tamañoMinimoUmbralY = 0.42 + extra;
+    const tamañoMaximoUmbralY = 0.55 + extra;
 
     if (tamañoRelativoXHistorial.length > ventanaTamaño) {
       tamañoRelativoXHistorial.shift();
@@ -68,8 +75,9 @@ async function handleFaceDetection(detections: any, width: number, height: numbe
     const promedioTamañoRelativoX = tamañoRelativoXHistorial.reduce((a, b) => a + b, 0) / tamañoRelativoXHistorial.length;
     const promedioTamañoRelativoY = tamañoRelativoYHistorial.reduce((a, b) => a + b, 0) / tamañoRelativoYHistorial.length;
 
+    // console.log(promedioTamañoRelativoX, promedioTamañoRelativoY);
+
     let message = '';
-    let color = 'red';
 
     if (inclinacion >= inclinacionMaxima) {
       message = 'Cara no recta';
@@ -84,9 +92,10 @@ async function handleFaceDetection(detections: any, width: number, height: numbe
       }
     }
 
-    data_process = { message, color };
+    data_process = { message: message, color: color };
+
   } else {
-    data_process = { message: detections.length > 1 ? 'Muchas caras' : 'Cara no detectada', color: 'red' };
+    data_process = { message: 'Cara no detectada', color: color };
   }
   
   return data_process;

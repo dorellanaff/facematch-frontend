@@ -1,10 +1,16 @@
 
 <div class="relative md:max-w-2xl md:mx-auto w-full h-screen flex flex-col">
+    <a #downloadLink style="display:none">Download</a>
+    <!--
+        
+    -->
+    <h2>{{meanTimeDetect}}</h2>
+    
     <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     
     
-    @if (resultCheck && photoTaken === true) {
+    @if (resultCheck && photoTaken) {
         <p class="text-4xl font-bold">{{resultMessageLiveness}}</p>
         <p class="text-4xl font-bold">{{resultMessageMatchFace}}</p>
     }
@@ -13,7 +19,7 @@
     <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
         <div class="flex justify-between items-center">
             <div class="w-5%">
-            <button type="button" (click)="closeModal()" class="w-full h-full bg-red-500 text-white px-4 py-2 rounded-md">X</button>
+            <button (click)="closeModal()" class="w-full h-full bg-red-500 text-white px-4 py-2 rounded-md">X</button>
             </div>
             <div class="w-95% text-center absolute bottom-4 w-full flex justify-center">
                 <p class="text-4xl font-bold">{{message}}</p>
@@ -22,7 +28,6 @@
         </div>
     </div>
 
-
     <!-- Contenedor del video y canvas -->
     <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
         <video #video (loadedmetadata)="onVideoLoad()"></video>
@@ -30,11 +35,23 @@
         <!--<canvas #canvas hidden width="{{ video?.offsetWidth ?? 0 + 5 }}" height="{{ video?.offsetHeight ?? 0 + 5 }}"></canvas>-->
 
     </div>
-    
-    <!-- Botón de captura debajo del video -->
-    <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
-        <div class="absolute bottom-4 w-full flex justify-center">
-            <button type="button" (click)="takePhoto()" class="px-4 py-2 bg-blue-500 text-white rounded">Tomar foto</button>
-        </div>
+
+
+
+</div>
+
+<!-- Contenedor de imágenes debajo del video y canvas -->
+<div class="flex relative mt-4">
+    <div class="grid grid-cols-1 gap-4">
+        @for (photo of listPhotos; track photo) {
+            <img class="relative mx-auto" [src]="photo" alt="Audit Photo" width="500" height="600">
+        }
     </div>
+
+
+
+<!-- Botón de captura debajo del video 
+    <div class="absolute bottom-4 w-full flex justify-center">
+    </div>
+-->
 </div>

@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+const url = environment.MAIN_URL;	
+const url_reco_liveness = `${environment.MAIN_URL}${environment.URL_RECO_LIVENESS}`;
+const url_reco_match = `${environment.MAIN_URL}${environment.URL_RECO_MATCH}`;
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +14,7 @@ export class FacematchService {
 
   constructor(private http: HttpClient) { }
 
-  checkLiveness(url: string, imageBase64: string): Observable<any> {
+  checkLiveness(imageBase64: string): Observable<any> {
     // Convert base64 string to File object
     const imageBlob = this.base64ToBlob(imageBase64, 'image/png');
 
@@ -21,10 +26,10 @@ export class FacematchService {
       //'Authorization': `Bearer ${this.bearerToken}`
     });
   
-    return this.http.post(url, formData);
+    return this.http.post(url_reco_liveness, formData);
   }
 
-  matchFace(url: string, imageBase64: string, idFace: string): Observable<any> {
+  matchFace(imageBase64: string, idFace: string): Observable<any> {
     // Convert base64 string to File object
     const imageBlob = this.base64ToBlob(imageBase64, 'image/png');
 
@@ -37,7 +42,7 @@ export class FacematchService {
       //'Authorization': `Bearer ${this.bearerToken}`
     });
   
-    return this.http.post(url, formData);
+    return this.http.post(url_reco_match, formData);
   }
   
   // Helper function to convert base64 string to Blob object
