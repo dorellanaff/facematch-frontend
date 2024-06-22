@@ -4,6 +4,8 @@ import { FacematchService } from '../../../core/services/facematch.service';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
@@ -67,6 +69,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     private deviceService: DeviceDetectorService,
     private route: ActivatedRoute,
     private router: Router,
+    private messageService: MessageService
   ) {
 
     if (typeof Worker !== 'undefined') {
@@ -87,6 +90,9 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   ngOnInit(): void {
+
+
+    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
 
     if (this.csrfToken === null){
       this.closeModal();
@@ -152,7 +158,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
   
   private onVideoLoaded() {
-        
+    this.videoLoaded = true;
+
     this.resizeCanvas();
     const canvas = this.canvasElement.nativeElement;
     canvas.hidden = false;
@@ -442,10 +449,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       this.photoTaken = true;
     }
     
-  }
-
-  public onVideoLoad() {
-    this.videoLoaded = true;
   }
 
   private drawOval() {

@@ -94,9 +94,9 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 			let extra = isMobile ? 0.25 : 0;
 
 			const tamañoMinimoUmbralX = 0.35 + extra;
-			const tamañoMaximoUmbralX = 0.55 + extra;
+			const tamañoMaximoUmbralX = 0.60 + extra;
 			const tamañoMinimoUmbralY = 0.35 + extra;
-			const tamañoMaximoUmbralY = 0.55 + extra;
+			const tamañoMaximoUmbralY = 0.60 + extra;
 
 			if (tamañoRelativoXHistorial.length > ventanaTamaño) {
 			tamañoRelativoXHistorial.shift();

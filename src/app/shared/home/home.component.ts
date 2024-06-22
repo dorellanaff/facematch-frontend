@@ -4,13 +4,17 @@ import { CommonModule } from '@angular/common';
 import { HomeButtonsComponent } from "../components/home-buttons/home-buttons.component";
 import { ActivatedRoute } from '@angular/router';
 import { FacematchService } from '../../core/services/facematch.service';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
 
 @Component({
     selector: 'app-home',
     standalone: true,
     templateUrl: './home.component.html',
     styleUrl: './home.component.scss',
-    imports: [WebcamFaceComponent, CommonModule, HomeButtonsComponent]
+    imports: [WebcamFaceComponent, CommonModule, HomeButtonsComponent, ToastModule],
+    providers: [MessageService]
 })
 export class HomeComponent implements OnInit {
   public isModalOpen: boolean = false;
@@ -22,10 +26,12 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private facematchService: FacematchService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private messageService: MessageService
   ){}
 
   ngOnInit(): void {
+    
     this.route.queryParamMap.subscribe(params => {
       this.idFace = params.get('idFace');
       
@@ -47,6 +53,7 @@ export class HomeComponent implements OnInit {
       }
       else{
         console.log('ID Face no detectado');
+
       }
 
     });
@@ -73,7 +80,9 @@ export class HomeComponent implements OnInit {
     }
   ]
 
-  openModal() {
+  openModal() {        
+    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
+
     this.isModalOpen = true;
   }
 

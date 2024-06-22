@@ -17,7 +17,6 @@
         <p class="text-4xl font-bold">{{resultMessageMatchFace}}</p>
     }
 
-    <!-- Botón de captura debajo del video -->
     <div class="relative" *ngIf="!photoTaken" [ngClass]="{'hidden': !videoLoaded}">
         <div class="flex justify-between items-center">
             <div class="w-5%">
@@ -31,7 +30,7 @@
 
     <!-- Contenedor del video y canvas -->
     <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
-        <video #video (loadedmetadata)="onVideoLoad()"></video>
+        <video #video muted playsinline></video>
         <canvas #canvas hidden></canvas>
         <!--<canvas #canvas hidden width="{{ video?.offsetWidth ?? 0 + 5 }}" height="{{ video?.offsetHeight ?? 0 + 5 }}"></canvas>-->
 
