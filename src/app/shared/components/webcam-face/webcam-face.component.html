@@ -31,7 +31,7 @@
 
     <!-- Contenedor del video y canvas -->
     <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
-        <video #video (loadedmetadata)="onVideoLoad()"></video>
+        <video playsinline #video (loadedmetadata)="onVideoLoad()"></video>
         <canvas #canvas hidden></canvas>
         <!--<canvas #canvas hidden width="{{ video?.offsetWidth ?? 0 + 5 }}" height="{{ video?.offsetHeight ?? 0 + 5 }}"></canvas>-->
 
