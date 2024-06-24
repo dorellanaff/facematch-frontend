@@ -13,7 +13,7 @@ const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 @Component({
   selector: 'app-webcam-face',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ToastModule],
   templateUrl: './webcam-face.component.html',
   styleUrl: './webcam-face.component.scss'
 })
@@ -93,18 +93,17 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   ngOnInit(): void {
 
+    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
+
     const element = document.getElementById('sectionId');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
 
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
-
     if (this.csrfToken === null){
       this.closeModal();
     }
 
-    console.log(this.csrfToken);
   }
 
   ngOnDestroy() {

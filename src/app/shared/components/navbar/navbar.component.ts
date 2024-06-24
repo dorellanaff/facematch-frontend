@@ -9,4 +9,8 @@ import { Component } from '@angular/core';
 })
 export class NavbarComponent {
 
+  // Este método se llama cuando se hace clic en la imagen
+  public reloadWindow() {
+    window.location.reload();
+  }
 }
