@@ -1,27 +1,40 @@
+<!--
 <p-toast />
+-->
 
-<div class="bg-white py-24 sm:py-32">
-    <p-toast />
+<div class="bg-white py-6 sm:py-16">
     
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
 
-        <main *ngIf="!isModalOpen">
+        @if (!isModalOpen){
+
+            <main>
             
-            <div class="mx-auto max-w-2xl lg:text-center">
-                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Verificación de Identidad</p>
-                
-                <button *ngIf="showButton"
-                    (click)="openModal()" 
-                    class="mt-8 inline-block rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
-                >Iniciar</button>
+                <div class="mx-auto max-w-2xl lg:text-center">
+                    <p class="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">Verificación de Identidad</p>
+                    
+                    @if (showButton){
+                        <button
+                        (click)="openModal()" 
+                        class="mt-8 inline-block rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:bg-transparent hover:text-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
+                        >Iniciar</button>
 
-            </div>
+                        
+                        <app-home-buttons [listButtons]="listButtons"></app-home-buttons>
 
-            <app-home-buttons [listButtons]="listButtons"></app-home-buttons>
+                    } @else {
+                        <i class="mt-12 pi pi-lock" style="color: rgb(144, 22, 22); font-size: 5rem"></i>
+                        <p class="mt-4 text-3xl tracking-tight text-gray-500 sm:text-3xl">{{messageError}}</p>
+                    }
+    
+                </div>
+    
+    
+            </main>
+        } @else {
+            <app-webcam-face class="justify-center min-h-screen" [csrfToken]="csrfToken" [idFace]="idFace" [isModalOpen]="isModalOpen" (close)="closeModal()"></app-webcam-face>
 
-        </main>
-
-        <app-webcam-face class="justify-center min-h-screen" [csrfToken]="csrfToken" [idFace]="idFace" [isModalOpen]="isModalOpen" *ngIf="isModalOpen" (close)="closeModal()"></app-webcam-face>
+        }
 
     </div>
 

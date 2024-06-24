@@ -20,6 +20,7 @@ export class HomeComponent implements OnInit {
   public isModalOpen: boolean = false;
   public idFace: string | null = null;
 
+  public messageError: string = 'Enlace no valido.';
   public csrfToken: string = ''; // cambiar por cookies
 
   public showButton: boolean = false;
@@ -29,6 +30,7 @@ export class HomeComponent implements OnInit {
     private route: ActivatedRoute,
     private messageService: MessageService
   ){}
+  
 
   ngOnInit(): void {
     
@@ -45,14 +47,14 @@ export class HomeComponent implements OnInit {
   
           }, 
           error: (error: any) => {
-            console.log(error.error.detail ?? 'Error al validar ID Face');
+            this.messageError = error.error.detail ?? 'Error al validar ID Face';
               
           }
         });
         
       }
       else{
-        console.log('ID Face no detectado');
+        this.messageError = 'ID Face no detectado';
 
       }
 
@@ -81,6 +83,7 @@ export class HomeComponent implements OnInit {
   ]
 
   openModal() {        
+
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
 
     this.isModalOpen = true;

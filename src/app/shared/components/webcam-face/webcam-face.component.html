@@ -1,17 +1,9 @@
 
-<div class="relative md:max-w-2xl md:mx-auto w-full h-screen flex flex-col">
-    <a #downloadLink style="display:none">Download</a>
-    <!--
-        
-    -->
-    <h2>Ms: {{meanTimeDetect}}</h2>
-    <h2>Mobile: {{isMobile}}</h2>
-    <h2>{{position}}</h2>
+<div id="webcamFaceComponent" class="relative md:max-w-2xl md:mx-auto w-full h-screen flex flex-col">
     
     <span class="loading absolute loading-dots loading-lg" *ngIf="!videoLoaded" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
     <span class="loading absolute loading-spinner loading-lg" *ngIf="photoTaken" [ngClass]="{'hidden': resultCheck}" style="top: 15%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;"></span>
-    
-    
+        
     @if (resultCheck && photoTaken) {
         <p class="text-4xl font-bold">{{resultMessageLiveness}}</p>
         <p class="text-4xl font-bold">{{resultMessageMatchFace}}</p>
@@ -39,18 +31,21 @@
 
 </div>
 
-<!-- Contenedor de imágenes debajo del video y canvas -->
-<div class="flex relative mt-4">
-    <div class="grid grid-cols-1 gap-4">
-        @for (photo of listPhotos; track photo) {
-            <img class="relative mx-auto" [src]="photo" alt="Audit Photo" width="500" height="600">
-        }
+@if (debug){
+    <div>
+        <h2>Ms: {{meanTimeDetect}}</h2>
+        <h2>Mobile: {{isMobile}}</h2>
+        <h2>{{position}}</h2>
     </div>
+    <a #downloadLink style="display:none">Download</a>
 
+        <!-- Contenedor de imágenes debajo del video y canvas -->
+    <div class="flex relative mt-4">
+        <div class="grid grid-cols-1 gap-4">
+            @for (photo of listPhotos; track photo) {
+                <img class="relative mx-auto" [src]="photo" alt="Audit Photo" width="500" height="600">
+            }
+        </div>
 
-
-<!-- Botón de captura debajo del video 
-    <div class="absolute bottom-4 w-full flex justify-center">
     </div>
--->
-</div>
+}

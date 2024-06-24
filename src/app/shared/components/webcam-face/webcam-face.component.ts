@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { environment } from '../../../../environments/environment';
 
 const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
@@ -39,6 +40,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   color: string = 'red';
   message: string = 'Centre el rostro';
   public position: string = '';
+  public debug: boolean = !environment.production;
 
   private videoStream!: MediaStream | null;
   public listPhotos: string[] = [];
@@ -57,6 +59,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   public videoLoaded: boolean = false;
   public photoTaken: boolean = false;
 
+  public startValidation: boolean = false;
   private isAnimating: boolean = false;
 
   private startDetection: boolean = false;
@@ -91,6 +94,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   ngOnInit(): void {
 
+    const element = document.getElementById('sectionId');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
 
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
 
@@ -227,7 +234,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       // Llamar a detectFaces de nuevo para iniciar el siguiente ciclo
       requestAnimationFrame(() => {
         
-
         setTimeout(() => {
           this.detectFaces();
         }, 1000);
@@ -247,7 +253,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     if ('type' in event){
       //console.log(event);
 
-      if (event.type === 'faceDetectionResult') {
+      if (event.type === 'faceDetectionResult' && !this.startValidation) {
         this.isProcessing = false;
 
         const { message, color, position } = event.data;
@@ -258,19 +264,15 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if ('initTime' in event){
           const initTime = event.initTime as number;
           const meanTime = Date.now() - initTime;
-          if (meanTime > 650 && meanTime < 1500 ){
+          //if (meanTime > 650 && meanTime < 1500 ){
             this.meanTimeDetect = meanTime;
-          }
+          //}
         }
 
         if (color === 'green'){
           // Audit photo
           if (this.videoStream && this.isAnimating === false){
-            
-            setTimeout(() => {
-              this.getPhoto();
-            }, 250);
-            
+            this.getPhoto();            
           }
         }
 
@@ -360,9 +362,13 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   public validatePhoto() {
+    this.startDetection = false;
+    console.log('Inicia validacion');
 
     //this.listPhotos.shift();
-    //this.getPhoto();
+    this.getPhoto();
+
+    this.startValidation = true;
     
     this.checkLiveness(this.listPhotos.slice(-1)[0]);
     
@@ -551,8 +557,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
       if (elapsed > (animationDuration / 2)){
         if (this.startDetection){
-          this.startDetection = false;
           this.validatePhoto();
+
         }
       }
   
