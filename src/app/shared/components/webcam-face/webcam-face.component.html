@@ -30,7 +30,11 @@
 
     <!-- Contenedor del video y canvas -->
     <div #videoContainer class="flex-grow relative" [ngClass]="{'hidden': photoTaken}">
+<<<<<<< HEAD
         <video #video muted playsinline></video>
+=======
+        <video playsinline #video (loadedmetadata)="onVideoLoad()"></video>
+>>>>>>> ac1501f110b1c8e245d1f9160ffceec2b73c5d47
         <canvas #canvas hidden></canvas>
         <!--<canvas #canvas hidden width="{{ video?.offsetWidth ?? 0 + 5 }}" height="{{ video?.offsetHeight ?? 0 + 5 }}"></canvas>-->
 
