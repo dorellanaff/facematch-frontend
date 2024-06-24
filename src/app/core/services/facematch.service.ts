@@ -15,25 +15,28 @@ export class FacematchService {
 
   constructor(private http: HttpClient) { }
 
-  checkLiveness(imageBase64: string): Observable<any> {
-    // Convert base64 string to File object
-    const imageBlob = this.base64ToBlob(imageBase64, 'image/png');
-
+  checkLiveness(imageBase64List: string[]): Observable<any> {
     const formData = new FormData();
-    formData.append('file', imageBlob, 'image.png');
+
+    // Convert base64 string to File object
+    imageBase64List.forEach((imageBase64, index) => {
+      const imageBlob = this.base64ToBlob(imageBase64, 'image/png');
+      const imageFile = new File([imageBlob], `image${index + 1}.png`, { type: 'image/png' });
+      formData.append('file', imageFile);
+    });
+
     const headers = new HttpHeaders({
       'Accept': '*/*',
-      'Content-Type': 'multipart/form-data',
+      //'Content-Type': 'multipart/form-data',
       //'Authorization': `Bearer ${this.bearerToken}`
     });
   
-    return this.http.post(url_reco_liveness, formData);
+    return this.http.post(url_reco_liveness, formData, { headers });
   }
 
   validateIdFace(idFace: string): Observable<any> {
     
     const url = `${url_reco_match_csrftoken}${idFace}`;
-
     return this.http.get(url);
 
   }

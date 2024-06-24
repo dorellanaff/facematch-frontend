@@ -61,7 +61,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   public startValidation: boolean = false;
   private isAnimating: boolean = false;
-
   private startDetection: boolean = false;
 
   mediaRecorder: any;
@@ -110,6 +109,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   ngOnDestroy() {
 
+    this.stopVideo();
     if (this.worker) {
       this.worker.terminate();
     }
@@ -251,7 +251,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   private async handleWorkerMessage(event: MessageEvent) {
 
     if ('type' in event){
-      //console.log(event);
 
       if (event.type === 'faceDetectionResult' && !this.startValidation) {
         this.isProcessing = false;
@@ -361,32 +360,28 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.mediaRecorder.stop();
   }
 
-  public validatePhoto() {
+  public async validatePhoto() {
     this.startDetection = false;
-    console.log('Inicia validacion');
 
     //this.listPhotos.shift();
-    this.getPhoto();
+    await this.getPhoto();
 
-    this.startValidation = true;
-    
-    this.checkLiveness(this.listPhotos.slice(-1)[0]);
+    this.checkLiveness(this.listPhotos); // .slice(-1)[0]
     
   }
 
-  private checkLiveness(image: string) {
-    this.facematchService.checkLiveness(image).subscribe({
+  private checkLiveness(images: string[]) {
+    this.startValidation = true;
+
+    this.facematchService.checkLiveness(images).subscribe({
       next: (data: any) => {
-        console.log('Imagen subida exitosamente:', data);
         let message = `Liveness - ${data.message} - ${data.threshold}`
-        this.resultCheck = true;
         this.resultMessageLiveness = message;
 
         this.matchFace();
 
       }, 
       error: (error: any) => {
-        console.error('Error al subir la imagen:', error);
         let message = `Liveness - ${error.error.message ?? 'Error al subir la imagen'} - ${error.error.threshold ?? 0}`
         this.resultCheck = true;
         this.resultMessageLiveness = message;
@@ -403,14 +398,12 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
     this.facematchService.matchFace(this.listPhotos.slice(-1)[0], this.idFace, this.csrfToken).subscribe({
       next: (data: any) => {
-        console.log('Imagen subida exitosamente:', data);
         let message = `Match Face - ${data.message} - ${data.threshold}`
         this.resultCheck = true;
         this.resultMessageMatchFace = message;
 
       }, 
       error: (error: any) => {
-        console.error('Error al subir la imagen:', error);
           let message = `Match Face - ${error.error.message ?? 'Error al subir la imagen'} - ${error.error.threshold ?? 0}`
           this.resultCheck = true;
           this.resultMessageMatchFace = message;
@@ -420,7 +413,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   }
 
-  private getPhoto(){
+  private async getPhoto(){
     // Captura el fotograma actual del video
     const canvas = document.createElement('canvas');
     canvas.width = this.videoElement.nativeElement.videoWidth;
@@ -437,14 +430,12 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   public closeModal() {
+
+    this.startValidation = false;
     this.startDetection = false;
-    this.stopVideo();
+    this.isAnimating = false;
+    
     this.close.emit();
-
-    if (this.worker){
-      this.worker.terminate();
-    }
-
   }
 
   private stopVideo() {
@@ -519,7 +510,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     let startTime: number | null = null;
   
     const drawFrame = (timestamp: number) => {
-      //console.log(this.isAnimating);
       if (!this.isAnimating) {
         return; // Detener la animación si la bandera se ha desactivado
       }
@@ -575,7 +565,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.isAnimating = true;
     requestAnimationFrame(drawFrame);
   }
-  
   
 }
 

@@ -20,11 +20,13 @@
                         >Iniciar</button>
 
                         
-                        <app-home-buttons [listButtons]="listButtons"></app-home-buttons>
+                        <app-home-buttons [listButtons]="listButtons" [ngClass]="{'hidden': !showButton}"></app-home-buttons>
 
                     } @else {
-                        <i class="mt-12 pi pi-lock" style="color: rgb(144, 22, 22); font-size: 5rem"></i>
-                        <p class="mt-4 text-3xl tracking-tight text-gray-500 sm:text-3xl">{{messageError}}</p>
+                        <div [ngClass]="{'hidden': !errorCsrf}">
+                            <i class="mt-12 pi pi-lock" style="color: rgb(144, 22, 22); font-size: 5rem"></i>
+                            <p class="mt-4 text-3xl tracking-tight text-gray-500 sm:text-3xl">{{messageError}}</p>
+                        </div>
                     }
     
                 </div>
