@@ -378,7 +378,9 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
     this.facematchService.checkLiveness(images).subscribe({
       next: (data: any) => {
-        let message = `Liveness - ${data.message} - ${data.threshold}`
+        let threshold: number = data.threshold;
+
+        let message = `Liveness - ${data.message} - ${threshold.toFixed(2)}`
         this.resultMessageLiveness = message;
 
         this.matchFace();
@@ -401,7 +403,9 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
     this.facematchService.matchFace(this.listPhotos.slice(-1)[0], this.idFace, this.csrfToken).subscribe({
       next: (data: any) => {
-        let message = `Match Face - ${data.message} - ${data.threshold}`
+        let threshold: number = data.threshold;
+
+        let message = `Match Face - ${data.message} - ${threshold.toFixed(2)}`
         this.resultCheck = true;
         this.resultMessageMatchFace = message;
 
