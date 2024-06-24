@@ -45,7 +45,7 @@ export class HomeComponent implements OnInit {
             this.csrfToken = data.csrf_token;
             this.showButton = true;
 
-            this.openModal();
+            //this.openModal();
   
           }, 
           error: (error: any) => {

@@ -91,7 +91,7 @@ async function validateFaceInOval(faceX, faceY, faceWidth, faceHeight, canvasWid
 
 async function handleFaceDetection(detections, width, height, isMobile, ventanaTamaño, inclinacionMaxima, tamañoRelativoXHistorial, tamañoRelativoYHistorial) {
   
-	let color = 'red';
+	let color = 'white';
 	let message = 'Cara no detectada';
 	let position = '';
   
@@ -99,6 +99,8 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 	}
 	
 	if (detections){
+
+		color = 'red';
 
 		const detection = detections;
 		const landmarks = detections.landmarks;

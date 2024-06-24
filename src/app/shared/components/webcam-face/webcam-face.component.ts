@@ -273,11 +273,11 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if (color === 'green'){
           // Audit photo
           if (this.videoStream && this.isAnimating === false){
-            this.getPhoto();            
+            this.getPhoto();
           }
         }
 
-        if (this.color === 'red' && this.isAnimating === true){
+        if ((this.color === 'red' || this.color === 'white') && this.isAnimating === true){
           this.isAnimating = false;
           this.startDetection = true;
           this.drawSegmentedSquare();
@@ -504,6 +504,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if (video.paused || video.ended) return;
 
         context.clearRect(0, 0, canvas.width, canvas.height);
+        this.context.beginPath();
 
         const size = canvas.width * sizeFactor;
         const segmentLength = size / segments;
@@ -568,6 +569,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   
     const drawFrame = (timestamp: number) => {
       if (!this.isAnimating) {
+        this.context.clearRect(0, 0, canvasWidth, canvasHeight);
         return; // Detener la animación si la bandera se ha desactivado
       }
   
