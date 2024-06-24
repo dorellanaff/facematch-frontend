@@ -65,6 +65,30 @@ async function use(data){
 	}
 }
 
+async function validateFaceInOval(faceX, faceY, faceWidth, faceHeight, canvasWidth, canvasHeight) {
+	const lineWidth = 2;
+	const desiredHeightReduction = 0.08;
+	const baseVerticalRadius = (canvasHeight - lineWidth) / 2;
+	const verticalRadius = baseVerticalRadius * (1 - desiredHeightReduction);
+	const horizontalRadius = verticalRadius / 2;
+
+	const centerX = canvasWidth / 2;
+	const centerY = canvasHeight / 2;
+
+    // Calculate the center of the face
+    const faceCenterX = faceX + faceWidth / 2;
+    const faceCenterY = faceY + faceHeight / 2;
+
+    // Normalize the coordinates with respect to the ellipse
+    const normalizedX = (faceCenterX - centerX) / horizontalRadius;
+    const normalizedY = (faceCenterY - centerY) / verticalRadius;
+
+    // Check if the normalized coordinates are within the unit circle
+    const isWithinOval = (normalizedX * normalizedX) + (normalizedY * normalizedY) <= 1;
+
+	return isWithinOval;
+}
+
 async function handleFaceDetection(detections, width, height, isMobile, ventanaTamaño, inclinacionMaxima, tamañoRelativoXHistorial, tamañoRelativoYHistorial) {
   
 	let color = 'red';
@@ -76,12 +100,22 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 	
 	if (detections){
 
-		//if (detections.length <= 1){
+		const detection = detections;
+		const landmarks = detections.landmarks;
 
-			//const detection = detections[0];
-			const detection = detections;
-			const landmarks = detections.landmarks;
+		const box = detection.alignedRect._box;
 
+		const faceX= box._x;
+		const faceY = box._y;
+		const faceWidth = box._width;
+		const faceHeight = box._height;
+
+		const isInOval = await validateFaceInOval(faceX, faceY, faceWidth, faceHeight, width, height);
+
+		if (!isInOval){
+			message = 'Cara no centrada';
+		} else {
+			
 			const inclinacion = calcularInclinacionOjos(landmarks);
 
 			const menorDimension = Math.min(width, height);
@@ -123,10 +157,8 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 					color = 'green';
 				}
 			}
-		/*}
-		else {
-			message = 'Mas de una cara';
-		}*/
+			
+		}
 
 	}
 	
