@@ -14,6 +14,7 @@ const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   selector: 'app-webcam-face',
   standalone: true,
   imports: [CommonModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './webcam-face.component.html',
   styleUrl: './webcam-face.component.scss'
 })
@@ -37,7 +38,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   ventanaTamaño: number = 5;
   inclinacionMaxima: number = 10; // Ángulo máximo de inclinación permitido en grados
   isMobile: boolean = false;
-  color: string = 'red';
+  color: string = 'white';
   message: string = 'Centre el rostro';
   public position: string = '';
   public debug: boolean = !environment.production;
@@ -103,6 +104,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     if (this.csrfToken === null){
       this.closeModal();
     }
+
+    console.log('csrfToken', this.csrfToken);
 
   }
 
@@ -277,7 +280,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if (this.color === 'red' && this.isAnimating === true){
           this.isAnimating = false;
           this.startDetection = true;
-          this.drawOval();
+          this.drawSegmentedSquare();
 
         } else if (this.color === 'green' && this.isAnimating === false && this.startDetection === true && this.listPhotos.length >= 3) {
           this.animateOvalColor();
@@ -310,7 +313,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     let videoContaineHeight = videoHeight + 100;
     this.videoContainerElement.nativeElement.style.maxHeight = `${videoContaineHeight}px`;
     
-    this.drawOval();
+    //this.drawOval();
+    this.drawSegmentedSquare();
   }
 
   public startRecording(){
@@ -465,8 +469,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     const centerY = (canvasHeight) / 2;
   
     // Fill the background with white color
-    this.context.fillStyle = this.backgroundColorCanvas;
-    this.context.fillRect(0, 0, canvasWidth, canvasHeight);
+    //this.context.fillStyle = this.backgroundColorCanvas;
+    //this.context.fillRect(0, 0, canvasWidth, canvasHeight);
   
     // Create an elliptical clipping path
     this.context.save();
@@ -486,6 +490,60 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     this.context.strokeStyle = 'black';
     this.context.stroke();
     */
+  }
+
+  private drawSegmentedSquare() {
+    const canvas = this.canvasElement.nativeElement;
+    const context = canvas.getContext('2d');
+    const video = this.videoElement.nativeElement;
+    const sizeFactor = this.isMobile ? 0.8 : 0.45; // Factor para el tamaño del cuadrado (50% del ancho del canvas)
+    const segments = 4; // Número de segmentos por borde
+
+    video.addEventListener('play', () => {
+      const draw = () => {
+        if (video.paused || video.ended) return;
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        const size = canvas.width * sizeFactor;
+        const segmentLength = size / segments;
+        const xCenter = canvas.width / 2;
+        const yCenter = canvas.height / 2;
+
+        context.strokeStyle = this.color;
+        context.lineWidth = 6;
+        // Esquinas superiores
+        // Esquina superior izquierda
+        context.moveTo(xCenter - size / 2, yCenter - size / 2);
+        context.lineTo(xCenter - size / 2 + segmentLength, yCenter - size / 2);
+        context.moveTo(xCenter - size / 2, yCenter - size / 2);
+        context.lineTo(xCenter - size / 2, yCenter - size / 2 + segmentLength);
+
+        // Esquina superior derecha
+        context.moveTo(xCenter + size / 2, yCenter - size / 2);
+        context.lineTo(xCenter + size / 2 - segmentLength, yCenter - size / 2);
+        context.moveTo(xCenter + size / 2, yCenter - size / 2);
+        context.lineTo(xCenter + size / 2, yCenter - size / 2 + segmentLength);
+
+        // Esquinas inferiores
+        // Esquina inferior izquierda
+        context.moveTo(xCenter - size / 2, yCenter + size / 2);
+        context.lineTo(xCenter - size / 2 + segmentLength, yCenter + size / 2);
+        context.moveTo(xCenter - size / 2, yCenter + size / 2);
+        context.lineTo(xCenter - size / 2, yCenter + size / 2 - segmentLength);
+
+        // Esquina inferior derecha
+        context.moveTo(xCenter + size / 2, yCenter + size / 2);
+        context.lineTo(xCenter + size / 2 - segmentLength, yCenter + size / 2);
+        context.moveTo(xCenter + size / 2, yCenter + size / 2);
+        context.lineTo(xCenter + size / 2, yCenter + size / 2 - segmentLength);
+
+
+        context.stroke();
+        requestAnimationFrame(draw);
+      };
+      draw();
+    });
   }
   
   private animateOvalColor() {

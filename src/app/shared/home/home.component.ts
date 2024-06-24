@@ -44,6 +44,8 @@ export class HomeComponent implements OnInit {
           next: (data: any) => {
             this.csrfToken = data.csrf_token;
             this.showButton = true;
+
+            this.openModal();
   
           }, 
           error: (error: any) => {
@@ -83,10 +85,10 @@ export class HomeComponent implements OnInit {
     }
   ]
 
-  openModal() {        
-
+  openModal() {
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
     this.isModalOpen = true;
+
   }
 
   closeModal() {
