@@ -19,6 +19,7 @@ import { MessageService } from 'primeng/api';
 export class HomeComponent implements OnInit {
   public isModalOpen: boolean = false;
   public idFace: string | null = null;
+  public errorCsrf: boolean = false;
 
   public messageError: string = 'Enlace no valido.';
   public csrfToken: string = ''; // cambiar por cookies
@@ -42,11 +43,11 @@ export class HomeComponent implements OnInit {
         this.facematchService.validateIdFace(this.idFace).subscribe({
           next: (data: any) => {
             this.csrfToken = data.csrf_token;
-
             this.showButton = true;
   
           }, 
           error: (error: any) => {
+            this.errorCsrf = true;
             this.messageError = error.error.detail ?? 'Error al validar ID Face';
               
           }
@@ -85,12 +86,12 @@ export class HomeComponent implements OnInit {
   openModal() {        
 
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
-
     this.isModalOpen = true;
   }
 
   closeModal() {
     this.isModalOpen = false;
+    
   }
 
 }
