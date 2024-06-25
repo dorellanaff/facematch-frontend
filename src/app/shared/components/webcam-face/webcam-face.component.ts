@@ -44,6 +44,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   public debug: boolean = !environment.production;
 
   private videoStream!: MediaStream | null;
+  public listPhotosAudit: string[] = [];
   public listPhotos: string[] = [];
   public meanTimeDetect: number = 500;
 
@@ -63,6 +64,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   public startValidation: boolean = false;
   private isAnimating: boolean = false;
   private startDetection: boolean = false;
+
+  private limitAuditPhoto: number = 2;
 
   mediaRecorder: any;
   recordedChunks: any[] = [];
@@ -93,6 +96,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   ngOnInit(): void {
+    if (this.debug){
+      console.log('Debug', this.debug);
+      console.log('csrfToken', this.csrfToken);
+    }
 
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message Content' });
 
@@ -105,7 +112,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       this.closeModal();
     }
 
-    console.log('csrfToken', this.csrfToken);
 
   }
 
@@ -177,7 +183,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
     this.startDetection = true;
     this.detectFaces();
-
   }
 
   private detectingFaces(){
@@ -273,7 +278,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
         if (color === 'green'){
           // Audit photo
           if (this.videoStream && this.isAnimating === false){
-            this.getPhoto();
+            this.getPhoto(true);
           }
         }
 
@@ -281,8 +286,18 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
           this.isAnimating = false;
           this.startDetection = true;
           this.drawSegmentedSquare();
+          this.listPhotos = [];
 
-        } else if (this.color === 'green' && this.isAnimating === false && this.startDetection === true && this.listPhotos.length >= 3) {
+        } else if (this.color === 'green' && this.isAnimating === false && this.startDetection === true && this.listPhotosAudit.length >= this.limitAuditPhoto) {
+          
+          setTimeout(() => {
+            this.getPhoto(false);
+          }, 500);
+          
+          setTimeout(() => {
+            this.getPhoto(false);
+          }, 1500);
+      
           this.animateOvalColor();
           
         }
@@ -313,7 +328,6 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     let videoContaineHeight = videoHeight + 100;
     this.videoContainerElement.nativeElement.style.maxHeight = `${videoContaineHeight}px`;
     
-    //this.drawOval();
     this.drawSegmentedSquare();
   }
 
@@ -366,7 +380,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   public async validatePhoto() {
     this.startDetection = false;
 
-    //this.listPhotos.shift();
+    //this.listPhotosAudit.shift();
     await this.getPhoto();
 
     this.checkLiveness(this.listPhotos); // .slice(-1)[0]
@@ -420,7 +434,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
 
   }
 
-  private async getPhoto(){
+  private async getPhoto(audit: boolean = true){
     // Captura el fotograma actual del video
     const canvas = document.createElement('canvas');
     canvas.width = this.videoElement.nativeElement.videoWidth;
@@ -428,11 +442,16 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     canvas.getContext('2d')!.drawImage(this.videoElement.nativeElement, 0, 0, canvas.width, canvas.height);
     const imgData = canvas.toDataURL('image/png');
 
-    if (this.listPhotos.length >= 3){
-      this.listPhotos.shift()
-    }
+    if (audit){
+      if (this.listPhotosAudit.length >= this.limitAuditPhoto){
+        this.listPhotosAudit.shift()
+      }
+      this.listPhotosAudit.push(imgData);
 
-    this.listPhotos.push(imgData);
+    } else {
+      this.listPhotos.push(imgData);
+
+    }
     
   }
 
@@ -500,7 +519,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     const canvas = this.canvasElement.nativeElement;
     const context = canvas.getContext('2d');
     const video = this.videoElement.nativeElement;
-    const sizeFactor = this.isMobile ? 0.8 : 0.45; // Factor para el tamaño del cuadrado (50% del ancho del canvas)
+    const sizeFactor = this.isMobile ? 0.8 : 0.38; // Factor para el tamaño del cuadrado (50% del ancho del canvas)
     const segments = 4; // Número de segmentos por borde
 
     video.addEventListener('play', () => {
@@ -561,11 +580,11 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     const purpleHue = 280; // Matiz de púrpura
     const lineWidth = 6; // Ancho del borde del óvalo
   
-    const desiredHeightReduction = 0.08;
+    const desiredHeightReduction = 0.20;
     const baseVerticalRadius = (canvasHeight - lineWidth) / 2;
     const verticalRadius = baseVerticalRadius * (1 - desiredHeightReduction);
-    const horizontalRadius = verticalRadius / 2;
-  
+    const horizontalRadius = verticalRadius / 1.5;
+
     const centerX = canvasWidth / 2;
     const centerY = canvasHeight / 2;
   
@@ -608,7 +627,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
       this.context.strokeStyle = `hsl(${purpleHue}, 100%, 50%)`;
       this.context.stroke();
 
-      if (elapsed > (animationDuration / 2)){
+      if (elapsed > 4500) { //(animationDuration / 2)){
         if (this.startDetection){
           this.validatePhoto();
 

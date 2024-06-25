@@ -43,6 +43,12 @@
         <!-- Contenedor de imágenes debajo del video y canvas -->
     <div class="flex relative mt-4">
         <div class="grid grid-cols-1 gap-4">
+            <h2>Audit</h2>
+            @for (photo of listPhotosAudit; track photo) {
+                <img class="relative mx-auto" [src]="photo" alt="Audit Photo" width="500" height="600">
+            }
+            
+            <h2>Validate</h2>
             @for (photo of listPhotos; track photo) {
                 <img class="relative mx-auto" [src]="photo" alt="Audit Photo" width="500" height="600">
             }

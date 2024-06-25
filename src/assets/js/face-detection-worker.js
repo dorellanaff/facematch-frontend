@@ -70,7 +70,7 @@ async function validateFaceInOval(faceX, faceY, faceWidth, faceHeight, canvasWid
 	const desiredHeightReduction = 0.08;
 	const baseVerticalRadius = (canvasHeight - lineWidth) / 2;
 	const verticalRadius = baseVerticalRadius * (1 - desiredHeightReduction);
-	const horizontalRadius = verticalRadius / 2;
+	const horizontalRadius = verticalRadius / 1.5;
 
 	const centerX = canvasWidth / 2;
 	const centerY = canvasHeight / 2;
@@ -129,10 +129,10 @@ async function handleFaceDetection(detections, width, height, isMobile, ventanaT
 
 			let extra = isMobile ? 0.25 : 0;
 
-			const tamañoMinimoUmbralX = 0.35 + extra;
-			const tamañoMaximoUmbralX = 0.60 + extra;
-			const tamañoMinimoUmbralY = 0.35 + extra;
-			const tamañoMaximoUmbralY = 0.60 + extra;
+			const tamañoMinimoUmbralX = 0.45 + extra;
+			const tamañoMaximoUmbralX = 0.57 + extra;
+			const tamañoMinimoUmbralY = 0.45 + extra;
+			const tamañoMaximoUmbralY = 0.57 + extra;
 
 			if (tamañoRelativoXHistorial.length > ventanaTamaño) {
 			tamañoRelativoXHistorial.shift();
