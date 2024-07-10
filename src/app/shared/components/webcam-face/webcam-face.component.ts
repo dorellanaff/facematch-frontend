@@ -97,6 +97,9 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
 
   ngOnInit(): void {
+
+    this.debug = true;
+
     if (this.debug){
       console.log('Debug', this.debug);
       console.log('csrfToken', this.csrfToken);
