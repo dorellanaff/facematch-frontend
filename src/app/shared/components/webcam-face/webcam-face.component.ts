@@ -38,6 +38,7 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   ventanaTamaño: number = 5;
   inclinacionMaxima: number = 10; // Ángulo máximo de inclinación permitido en grados
   isMobile: boolean = false;
+  public resolutionWebcam: string = '';
   color: string = 'white';
   message: string = 'Centre el rostro';
   public position: string = '';
@@ -173,6 +174,9 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
   }
   
   private onVideoLoaded() {
+
+    this.resolutionWebcam = `${this.videoElement.nativeElement.videoWidth}x${this.videoElement.nativeElement.videoHeight}`;
+
     this.videoLoaded = true;
 
     this.resizeCanvas();
