@@ -390,8 +390,10 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     //this.listPhotosAudit.shift();
     await this.getPhoto();
 
-    this.checkLiveness(this.listPhotos); // .slice(-1)[0]
+    // this.checkLiveness(this.listPhotos); // .slice(-1)[0]
     
+    this.matchFace();
+
   }
 
   private checkLiveness(images: string[]) {
@@ -526,7 +528,8 @@ export class WebcamFaceComponent implements OnInit, AfterViewInit { //AfterViewI
     const canvas = this.canvasElement.nativeElement;
     const context = canvas.getContext('2d');
     const video = this.videoElement.nativeElement;
-    const sizeFactor = this.isMobile ? 0.8 : 0.38; // Factor para el tamaño del cuadrado (50% del ancho del canvas)
+    // const sizeFactor = this.isMobile ? 0.8 : 0.38; // Factor para el tamaño del cuadrado (50% del ancho del canvas)
+    const sizeFactor = 0.8; // Factor para el tamaño del cuadrado
     const segments = 4; // Número de segmentos por borde
 
     video.addEventListener('play', () => {

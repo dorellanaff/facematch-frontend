@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-const url = environment.MAIN_URL;	
 const url_reco_liveness = `${environment.MAIN_URL}${environment.URL_RECO_LIVENESS}`;
 const url_reco_match = `${environment.MAIN_URL}${environment.URL_RECO_MATCH}`;
 const url_reco_match_csrftoken = `${environment.MAIN_URL}${environment.URL_RECO_MATCH_CSRFTOKEN}`;
